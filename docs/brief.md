@@ -1,4 +1,4 @@
-# CryoEM-GPU — Revised NVIDIA Portfolio Project
+# CryoEM-GPU
 
 I want to revise the proposed CryoEM-GPU project before generating the Codex implementation prompt.
 
