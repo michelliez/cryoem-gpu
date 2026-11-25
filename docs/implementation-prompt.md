@@ -83,9 +83,9 @@ If `CpuThreaded` takes more than about an hour, apply cut #1 (spec §8) and note
 ### 🛑 M4.5: Kaggle GPU smoke test (the user runs this)
 Push to `master`. Give the user a short notebook cell sequence:
 
-1. `%env CUDA_VISIBLE_DEVICES=0`
+1. `COMMIT = "<sha you just pushed>"`, `%env CRYOEM_GPU_COMMIT={COMMIT}`, `%env CUDA_VISIBLE_DEVICES=0`
 2. `!nvidia-smi`
-3. `!pip install mrcfile git+https://github.com/michelliez/cryoem-gpu`
+3. `!pip install mrcfile git+https://github.com/michelliez/cryoem-gpu@{COMMIT}`
 4. Download 2 files.
 5. `!python -m pytest -m gpu`
 6. `!python scripts/smoke_gpu.py`
@@ -105,14 +105,13 @@ Then wait. Fix any GPU-only bug the user reports, and set any agreement toleranc
 
 ### M6: Kaggle notebook
 - Create `notebooks/cryoem_gpu_kaggle.ipynb`. Its cells:
-  1. Set `CUDA_VISIBLE_DEVICES=0`.
+  1. Set `COMMIT`, `CRYOEM_GPU_COMMIT` and `CUDA_VISIBLE_DEVICES=0` (spec §5.4).
   2. Record the environment (`nvidia-smi`, versions, cores, `df -h`, `free -h`).
-  3. Install the package from GitHub.
+  3. Install the package from GitHub, pinned to `@{COMMIT}`.
   4. Download the subset and the volume.
   5. Run the agreement gate.
   6. Run `run_benchmarks.py --max-minutes ...`.
-  7. Run `make_figures.py`.
-  8. Zip `results/` for download.
+  7. Zip `results/` to `/kaggle/working/results.zip`. Do not run `make_figures.py` here: figures are generated locally from the committed CSV (spec §5.5).
 - Keep the logic in the package. Notebook cells only call it.
 
 **Accept:** the notebook is valid JSON, runs top to bottom locally with a `--backend fake` / small-N switch, and contains no pasted library code.
@@ -136,7 +135,7 @@ Then wait. Fix any GPU-only bug the user reports, and set any agreement toleranc
 - The README links to `docs/`.
 
 ### 🛑 M10: Canonical run (the user runs this)
-The user runs the notebook on Kaggle and commits `results/`. You then run `make_figures.py`, check the README against the CSV, and commit the result. If any figure or claim does not match the data, fix the generator, not the text.
+The user follows spec §5.5: run the notebook with a pinned `COMMIT`, download `results.zip`, check it, and commit `results/` locally. You then run `make_figures.py`, check the README against the CSV, and commit the generated outputs separately. If any figure or claim does not match the data, fix the generator, not the text.
 
 ## Cut order
 

@@ -89,7 +89,7 @@ CTF = √(1 − A²)·sin χ + A·cos χ                          A = amplitude 
 - Phase flip: `F ← F · sign(CTF)`, with sign(0) = +1.
 - Compute CTF per chunk on the active backend from per-particle parameters broadcast as `(B,1,1)`. That time counts in the benchmarks.
 
-Orientation risk: whether `ky` points "up" depends on the MRC row order, and getting it wrong mirrors the astigmatism angle. The Thon-ring figure (§6.2) checks this on an astigmatic micrograph. If the predicted ellipse does not line up with the rings, negate `ky` in the CTF grid, then record the change in decisions.md.
+Orientation risk: whether `ky` points "up" depends on the MRC row order, and getting it wrong mirrors the astigmatism angle. The Thon-ring figure (§6.3) checks this on an astigmatic micrograph. If the predicted ellipse does not line up with the rings, negate `ky` in the CTF grid, then record the change in decisions.md.
 
 ### 3.5 Fused pipeline
 
@@ -122,7 +122,8 @@ tests/  results/  docs/
 - **CuPy is optional.** Import it lazily. `pyproject.toml` has no CuPy dependency, but has an optional `[gpu]` extra naming `cupy-cuda13x`. Never install a second CuPy on Kaggle.
 - **GPU device.** The notebook sets `CUDA_VISIBLE_DEVICES=0` before CuPy is imported.
 - **GPU transfers.** `process_stack` on the GPU copies each chunk into a pinned staging buffer (`cupyx.empty_pinned`), then H2D, compute, D2H into pinned memory, then copies out to the host output. The pageable↔pinned copies are inside T_e2e. Do not pin the whole stack. Stream overlap is a stretch goal.
-- **Threaded CPU.** A `ThreadPoolExecutor` sized to the measured usable cores (`len(os.sched_getaffinity(0))`) processes chunks in parallel into a preallocated output, with `scipy.fft` `workers=1` inside. If this takes more than a small amount of effort, drop it and document NumPy's single-threaded elementwise ops instead (cut #1).
+- **Threaded CPU.** A `ThreadPoolExecutor` sized to the measured usable cores processes chunks in parallel into a preallocated output, with `scipy.fft` `workers=1` inside. If this takes more than a small amount of effort, drop it and document NumPy's single-threaded elementwise ops instead (cut #1).
+- **Usable cores.** One helper, `usable_cores()`, returns `len(os.sched_getaffinity(0))` where it exists (Linux, including Kaggle). Otherwise, for example on macOS, it returns `os.cpu_count()`. The thread pool, the fingerprint (`n_cores_usable`) and the README caveat all use this helper.
 - **FakeDevice.** Lets the CPU-only tests exercise the GPU control flow (staging, transfers, sync, chunk boundaries).
 - **Packaging.** MIT license, `requires-python >= 3.10`, `pip install -e .`. The notebook installs with `pip install git+https://github.com/michelliez/cryoem-gpu`.
 
@@ -156,6 +157,27 @@ For CPU backends, compute equals e2e, so record only `e2e`. The headline speedup
 ### 5.4 Results CSV (`results/benchmarks.csv`)
 
 Append each row as soon as its measurement finishes, and flush. The key is `(experiment, op, backend, n_particles, chunk_size, tier)`, and keys already present are skipped, which makes reruns resumable. Columns are the key plus `n_trials, median_s, min_s, max_s, timestamp, git_sha`, plus the fingerprint: `cpu_model, n_cores_usable, gpu_name, driver, cuda_runtime, python, numpy, scipy, cupy, mrcfile`. Also write the fingerprint once to `results/environment.json`.
+
+`git_sha` is the commit of the installed package code. On Kaggle the package is installed with pip, so there is no `.git` directory. Resolve the SHA in this order, and record which source was used in `environment.json`:
+
+1. pip's install metadata: `importlib.metadata.distribution("cryoem-gpu").read_text("direct_url.json")`, field `vcs_info.commit_id`. pip writes this for every `git+https` install, including unpinned ones.
+2. The `CRYOEM_GPU_COMMIT` environment variable.
+3. `git rev-parse HEAD`, for local editable installs.
+4. Otherwise `"unknown"`, with a printed warning. `run_benchmarks.py` refuses to run on a GPU backend when the SHA is unknown, unless `--allow-unknown-sha` is passed.
+
+The notebook's first cell sets `COMMIT = "<sha>"` and uses it for both the install, `pip install git+https://github.com/michelliez/cryoem-gpu@{COMMIT}`, and `%env CRYOEM_GPU_COMMIT={COMMIT}`. A canonical run always uses a pinned SHA, never a branch name.
+
+### 5.5 Results flow
+
+Kaggle results reach the repo, and then the README, only by this path:
+
+1. **Run on Kaggle.** The notebook writes `results/` under `/kaggle/working/` (`benchmarks.csv`, `environment.json`, `*.npz`) and zips it as `/kaggle/working/results.zip`.
+2. **Download.** Get `results.zip` from the notebook's Output panel. If the session dies, rerun it with the same `COMMIT`. The resumable CSV picks up where it stopped, provided the partial `results/` was restored first, either from the saved output version or by uploading the earlier zip as a Kaggle Dataset input.
+3. **Commit locally.** Unzip into the repo's `results/`, replacing it. Check that `environment.json` names a T4 and that its `git_sha` is an ancestor of the current `HEAD`. Then commit with a message naming that SHA and the Kaggle run date.
+4. **Generate.** Run `python scripts/make_figures.py` locally. It reads only the committed `results/` and writes `results/figures/*.png`, `results/summary.md` and the README marker blocks. Commit those outputs in a second commit.
+5. **Check.** If a figure or claim looks wrong, fix the generator or rerun the benchmark. Never hand-edit numbers in `results/` or the README.
+
+`make_figures.py` does not run on Kaggle in the canonical flow, so the committed figures always come from the committed CSV.
 
 ## 6. Correctness
 
@@ -220,3 +242,23 @@ If time runs short, cut in this order:
 4. The 3D demo.
 
 Never cut CTF, the agreement tests or the particle benchmarks.
+
+## 9. Milestones
+
+Each milestone ends in a commit after its acceptance criteria have been verified by running them. Everything except M4.5 and the canonical run (§5.5) runs on CPU, with GPU control flow exercised through `FakeDevice`.
+
+| # | Scope | Acceptance criteria |
+|---|---|---|
+| M0 | Scaffold: `pyproject.toml` (src layout, MIT, `>=3.10`, deps numpy/scipy/mrcfile/matplotlib, extras `[gpu]`, `[dev]`), `.gitignore` (`data/`), LICENSE, pytest markers `network` and `gpu` | `pip install -e .[dev]` succeeds in a fresh venv. `pytest` collects without errors. |
+| M1 | `star.py`, `io.py`, `scripts/download_subset.py` (§2) | STAR fixture tests pass, including the 17-token row. Pixel size = 1.34 Å ± 1e-3. The `network` test reads `MRC_0601/001` as `(97,360,360)` float32 with 97 STAR rows, and skips offline. `--n-files 2` downloads, writes `subset.star`, and downloads nothing on a rerun. |
+| M2 | `backend.py` (CpuSerial, CpuThreaded, FakeDevice, untested Gpu), `usable_cores()`, `filters.py`, `config.py` | Dtypes are float32/complex64 at every stage. Low-pass profile tests pass. Normalized background has mean ≈ 0, std ≈ 1. The rfft2→irfft2 round trip is within tolerance. CpuThreaded and FakeDevice match CpuSerial. `usable_cores()` returns ≥ 1 on macOS and Linux. |
+| M3 | `ctf.py` (§3.4) | λ(300 kV) = 0.019687 Å ± 1e-6. Non-astigmatic A = 0 sign changes fall at the analytic χ zeros. CTF(0) = A. U↔V swap with φ + 90° is invariant. The flip sign is ±1 only, with sign(0) = +1. |
+| M4 | `pipeline.py` (per-op, fused `process_chunk`, `process_stack`), `tests/test_agreement.py` (`gpu`), `scripts/smoke_gpu.py` | The fused pipeline equals the sequential per-op composition. `process_stack` gives the same result for chunk sizes 1, 7, 500 and N. FakeDevice matches CpuSerial through the full GPU control flow. Agreement tests skip cleanly without CuPy. |
+| M4.5 | **Kaggle GPU smoke test (run by the user).** Pinned-SHA install, `CUDA_VISIBLE_DEVICES=0`, `nvidia-smi`, download 2 files, `pytest -m gpu`, `smoke_gpu.py` on ~100 particles | `nvidia-smi` shows a T4. Every agreement test passes, or a failing tolerance is reset from measured values under the §6.1 rule and logged in decisions.md. The sign-disagreement fraction is reported. The CUDA-event and perf_counter compute times agree. The resolved `git_sha` matches the pinned `COMMIT`. |
+| M5 | `bench.py`, `scripts/run_benchmarks.py` (§5): tiers, `particles_op`, `particles_pipeline`, warm-up, trial counts, resumable CSV, fingerprint, SHA resolution, dry-run estimate, `--max-minutes`, agreement gate, npz outputs for figures 3–4 | On synthetic data with CpuSerial and FakeDevice: a killed and restarted run skips the recorded rows. Every row has every column. `--max-minutes 0.1` stops between configurations without writing a partial row. Each SHA source in §5.4 is unit-tested. Test outputs go to a temp dir, never to `results/`. |
+| M6 | `notebooks/cryoem_gpu_kaggle.ipynb`: `COMMIT` cell, env record, install, download, agreement gate, benchmarks, zip `results/` | Valid JSON. Runs top to bottom locally with the fake backend at small N. Cells only call the package and contain no pasted library code. |
+| M7 | `scripts/make_figures.py` (§6.3): figures, `summary.md`, README marker blocks | Every figure renders from a synthetic CSV and npz. Replacing the README markers is idempotent: two runs give an identical file. |
+| M8 | 3D demo: `volume3d` experiment, figure 5 | A synthetic 64³ volume matches between CpuSerial and FakeDevice. Figure 5 renders from a saved npz. |
+| M9 | README (§7) with marker placeholders and a Kaggle badge | Every number in the README is inside a generated marker block, including the core count. Links to `docs/` resolve. |
+
+After M9, the canonical Kaggle run follows §5.5.
