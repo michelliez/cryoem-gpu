@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cryoem-gpu"
+version = "0.1.0"
+description = "Benchmark batched cryo-EM particle processing on a T4 GPU against a multicore CPU baseline"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "mrcfile",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+gpu = ["cupy-cuda13x"]
+dev = ["pytest", "packaging"]
+
+[project.urls]
+Repository = "https://github.com/michelliez/cryoem-gpu"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "network: needs internet access to EMPIAR; skips when offline",
+    "gpu: needs CuPy and a CUDA GPU; skips otherwise",
+]
