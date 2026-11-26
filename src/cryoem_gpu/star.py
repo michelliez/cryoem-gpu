@@ -42,7 +42,7 @@ def read_star(path: str | PathLike) -> list[Particle]:
     with open(path) as f:
         for lineno, line in enumerate(f, start=1):
             tokens = line.split()
-            if not tokens or tokens[0].startswith(("#", "data_")) or tokens[0] == "loop_":
+            if _is_blank_or_block(tokens):
                 continue
             if tokens[0].startswith("_"):
                 labels.append(tokens[0][1:])
@@ -56,6 +56,36 @@ def read_star(path: str | PathLike) -> list[Particle]:
                 )
             particles.append(_particle(tokens, col))
     return particles
+
+
+def write_subset(src: str | PathLike, dest: str | PathLike, files: set[str]) -> int:
+    """Copy src to dest, keeping the header and only the data rows whose image is in files.
+
+    Rows are copied verbatim. Returns the number of rows kept.
+    """
+    labels: list[str] = []
+    image_col: int | None = None
+    kept = 0
+    with open(src) as f, open(dest, "w") as out:
+        for line in f:
+            tokens = line.split()
+            if _is_blank_or_block(tokens):
+                out.write(line)
+                continue
+            if tokens[0].startswith("_"):
+                labels.append(tokens[0][1:])
+                out.write(line)
+                continue
+            if image_col is None:
+                image_col = _column_index(labels)["rlnImageName"]
+            if tokens[image_col].split("@", 1)[1] in files:
+                out.write(line)
+                kept += 1
+    return kept
+
+
+def _is_blank_or_block(tokens: list[str]) -> bool:
+    return not tokens or tokens[0].startswith(("#", "data_")) or tokens[0] == "loop_"
 
 
 def _column_index(labels: list[str]) -> dict[str, int]:

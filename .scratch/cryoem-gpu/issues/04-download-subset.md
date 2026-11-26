@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] `--n-files 2` downloads, writes `subset.star`, and downloads nothing on a rerun.
-- [ ] *(derived, §2.2)* A truncated stack is detected by size and re-downloaded.
-- [ ] *(derived, §2.2)* Throughput and free disk space are reported; `--volume` fetches the EMD-2660 map.
+- [x] `--n-files 2` downloads, writes `subset.star`, and downloads nothing on a rerun.
+- [x] *(derived, §2.2)* A truncated stack is detected by size and re-downloaded.
+- [x] *(derived, §2.2)* Throughput and free disk space are reported; `--volume` fetches the EMD-2660 map.
