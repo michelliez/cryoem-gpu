@@ -10,6 +10,10 @@ BG_RADIUS_PX = 150.0
 # (spec §6.1 starts at 1e-5..1e-4).
 TOLERANCES = {
     "roundtrip": 1e-6,
+    # Absolute: float32 frequency grid against a float64 reference, and normalized
+    # background mean/std against 0/1.
+    "freq_grid": 1e-6,
+    "background_stats": 1e-5,
     "normalize": 1e-5,
     "rfft2": 1e-5,
     "irfft2": 1e-5,

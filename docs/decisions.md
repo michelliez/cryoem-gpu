@@ -57,3 +57,7 @@
 - Cut order if short on time: (1) threaded CPU → serial + docs; (2) 3D demo timing breakdown; (3) fewer scaling particle counts (1k and 10k only); (4) 3D demo. Never cut: CTF, agreement tests, particle benchmarks.
 - MIT license; requires-python >= 3.10. README credits EMPIAR-10028 / EMD-2660 (CC0) and cites Wong et al. 2014, eLife.
 - run_benchmarks.py takes --max-minutes (stops cleanly between configs) and prints an estimated total runtime from a quick n=100 dry run before the full sweep.
+
+## Ticket 06: filters (2026-11-25)
+- `normalize` accumulates the background mean/std in float64 and casts back, so every stage array stays float32. With float32 accumulation the mean drifted ~1.2e-4 on a background offset of 50 (measured), which failed the mean ≈ 0 check. The reduction is memory-bound, so the T4's slow FP64 should cost little. If the M4.5 per-op timing says otherwise, switch to a float32 two-pass mean.
+- `lowpass` computes the Fourier-pixel radius from integer indices (`fftfreq(n, d=1/n)`). This equals `s·box·pixel_size` for a cubic box and avoids float32 rounding at the band edges. Non-cubic shapes raise `ValueError`.

@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] Dtypes are float32/complex64 at every stage.
-- [ ] Low-pass profile tests pass (1 in the passband, 0 beyond the edge, monotone in between).
-- [ ] Normalized background has mean ≈ 0, std ≈ 1.
+- [x] Dtypes are float32/complex64 at every stage.
+- [x] Low-pass profile tests pass (1 in the passband, 0 beyond the edge, monotone in between).
+- [x] Normalized background has mean ≈ 0, std ≈ 1.
