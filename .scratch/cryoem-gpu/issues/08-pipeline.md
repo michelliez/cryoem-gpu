@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The fused pipeline equals the sequential per-op composition.
-- [ ] `process_stack` gives the same result for chunk sizes 1, 7, 500 and N.
-- [ ] FakeDevice matches CpuSerial through the full GPU control flow.
+- [x] The fused pipeline equals the sequential per-op composition.
+- [x] `process_stack` gives the same result for chunk sizes 1, 7, 500 and N.
+- [x] FakeDevice matches CpuSerial through the full GPU control flow.

@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 
 class CtfParams(NamedTuple):
-    """Per-particle CTF parameters in STAR units, each a (B,) array on the active backend."""
+    """Per-particle CTF parameters in STAR units, each a (B,) array (on the backend for ctf())."""
 
     defocus_u: object
     defocus_v: object

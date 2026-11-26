@@ -67,3 +67,8 @@
 - Defocus and χ are computed inline in `ctf()` rather than as separate public functions (spec §4 lists them). Nothing else needs them yet.
 - `ctf_closed_form` tolerance is 1e-4 absolute, not 1e-5: the U↔V swap identity differs by ~6e-5 in float32 (measured) because χ reaches ~500 rad at the 360² grid corner.
 - `ky` orientation is still as in §3.1 (unflipped). The Thon-ring figure (ticket 15) decides it; no test here ties φ to the image's y direction.
+
+## Ticket 08: pipeline (2026-11-25)
+- `process_stack(host_stack, params, backend, chunk_size)` keeps the spec signature. `params` is a `StackParams(ctf, pixel_size)`: host `(N,)` CTF columns plus Å/px, since the low-pass and the CTF grid both need the pixel size.
+- Each chunk's six CTF columns go through `backend.to_device` with the images, so they use the same staging path. They are a few KB per chunk. `process_stack` casts them to the image dtype (float32) first: float64 columns would make the shared staging buffer reallocate on every chunk, a pinned allocation inside T_e2e on the GPU.
+- The fused step multiplies `F` in place by `L · sign(CTF)`, one real `(B, H, W/2+1)` factor, so the chunk needs one complex multiply rather than two.
