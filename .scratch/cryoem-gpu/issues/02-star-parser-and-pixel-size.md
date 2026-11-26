@@ -6,5 +6,5 @@
 
 **Status:** ready-for-agent
 
-- [ ] STAR fixture tests pass, including the 17-token row.
-- [ ] Pixel size = 1.34 Å ± 1e-3.
+- [x] STAR fixture tests pass, including the 17-token row.
+- [x] Pixel size = 1.34 Å ± 1e-3.
