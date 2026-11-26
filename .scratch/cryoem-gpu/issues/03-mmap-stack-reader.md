@@ -6,6 +6,6 @@
 
 **Status:** ready-for-agent
 
-- [ ] The `network` test reads `MRC_0601/001` as `(97,360,360)` float32 with 97 STAR rows, and skips offline.
-- [ ] *(derived, §6.2)* The network test downloads to a gitignored cache on first use and nothing is committed.
-- [ ] *(derived, §2.1)* A STAR/`nz` row-count mismatch raises an error.
+- [x] The `network` test reads `MRC_0601/001` as `(97,360,360)` float32 with 97 STAR rows, and skips offline.
+- [x] *(derived, §6.2)* The network test downloads to a gitignored cache on first use and nothing is committed.
+- [x] *(derived, §2.1)* A STAR/`nz` row-count mismatch raises an error.
