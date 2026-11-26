@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The rfft2→irfft2 round trip is within tolerance.
-- [ ] CpuThreaded and FakeDevice match CpuSerial.
-- [ ] `usable_cores()` returns ≥ 1 on macOS and Linux.
-- [ ] *(derived, §4)* Importing the package without CuPy installed succeeds.
+- [x] The rfft2→irfft2 round trip is within tolerance.
+- [x] CpuThreaded and FakeDevice match CpuSerial.
+- [x] `usable_cores()` returns ≥ 1 on macOS and Linux. *(Run natively on macOS; the Linux `sched_getaffinity` branch is exercised with a stub.)*
+- [x] *(derived, §4)* Importing the package without CuPy installed succeeds.
