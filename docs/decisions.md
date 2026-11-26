@@ -61,3 +61,9 @@
 ## Ticket 06: filters (2026-11-25)
 - `normalize` accumulates the background mean/std in float64 and casts back, so every stage array stays float32. With float32 accumulation the mean drifted ~1.2e-4 on a background offset of 50 (measured), which failed the mean ≈ 0 check. The reduction is memory-bound, so the T4's slow FP64 should cost little. If the M4.5 per-op timing says otherwise, switch to a float32 two-pass mean.
 - `lowpass` computes the Fourier-pixel radius from integer indices (`fftfreq(n, d=1/n)`). This equals `s·box·pixel_size` for a cubic box and avoids float32 rounding at the band edges. Non-cubic shapes raise `ValueError`.
+
+## Ticket 07: CTF (2026-11-25)
+- `ctf` takes `CtfParams` in STAR units (defocus Å, angle degrees, voltage kV, Cs mm) and converts inside. The spec formula's volts, radians and Å for Cs stay internal, so callers pass STAR columns unchanged.
+- Defocus and χ are computed inline in `ctf()` rather than as separate public functions (spec §4 lists them). Nothing else needs them yet.
+- `ctf_closed_form` tolerance is 1e-4 absolute, not 1e-5: the U↔V swap identity differs by ~6e-5 in float32 (measured) because χ reaches ~500 rad at the 360² grid corner.
+- `ky` orientation is still as in §3.1 (unflipped). The Thon-ring figure (ticket 15) decides it; no test here ties φ to the image's y direction.

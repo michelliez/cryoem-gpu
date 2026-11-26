@@ -14,6 +14,14 @@ TOLERANCES = {
     # background mean/std against 0/1.
     "freq_grid": 1e-6,
     "background_stats": 1e-5,
+    # Absolute: λ(300 kV) against the spec's 0.019687 Å, and float32 CTF against its
+    # closed-form identities (CTF(0) = A, U↔V swap with φ + 90°). χ reaches ~500 rad at
+    # the corner of a 360² grid at 31000 Å defocus, so float32 rounding of χ alone moves
+    # the CTF by ~6e-5 (measured).
+    "wavelength": 1e-6,
+    "ctf_closed_form": 1e-4,
+    # In grid steps: how far a sampled CTF sign change may sit from the analytic χ zero.
+    "ctf_zero_steps": 2,
     "normalize": 1e-5,
     "rfft2": 1e-5,
     "irfft2": 1e-5,

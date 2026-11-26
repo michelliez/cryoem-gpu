@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] λ(300 kV) = 0.019687 Å ± 1e-6.
-- [ ] Non-astigmatic A = 0 sign changes fall at the analytic χ zeros.
-- [ ] CTF(0) = A.
-- [ ] U↔V swap with φ + 90° is invariant.
-- [ ] The flip sign is ±1 only, with sign(0) = +1.
+- [x] λ(300 kV) = 0.019687 Å ± 1e-6.
+- [x] Non-astigmatic A = 0 sign changes fall at the analytic χ zeros.
+- [x] CTF(0) = A.
+- [x] U↔V swap with φ + 90° is invariant.
+- [x] The flip sign is ±1 only, with sign(0) = +1.
