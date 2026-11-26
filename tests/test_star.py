@@ -1,5 +1,6 @@
 import pytest
 
+from cryoem_gpu import config
 from cryoem_gpu.star import pixel_size, read_star
 
 HEADER = """
@@ -79,11 +80,11 @@ def test_row_with_stray_17th_token_is_read_from_first_16(tmp_path):
 def test_pixel_size_derived_from_detector_and_magnification(tmp_path):
     (particle,) = read_star(write_star(tmp_path, ROW_1))
 
-    assert particle.pixel_size == pytest.approx(1.34, abs=1e-3)
+    assert particle.pixel_size == pytest.approx(1.34, abs=config.TOLERANCES["pixel_size"])
 
 
 def test_pixel_size_formula():
-    assert pixel_size(14.0, 104478.0) == pytest.approx(1.34, abs=1e-3)
+    assert pixel_size(14.0, 104478.0) == pytest.approx(1.34, abs=config.TOLERANCES["pixel_size"])
     assert pixel_size(5.0, 50000.0) == pytest.approx(1.0)
 
 

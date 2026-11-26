@@ -1,36 +1,12 @@
 import numpy as np
 import pytest
 
+import synthetic
+from agreement import errors
 from cryoem_gpu import config, pipeline
 from cryoem_gpu.backend import CpuSerial, CpuThreaded, FakeDevice
 from cryoem_gpu.ctf import CtfParams
-
-PIXEL_SIZE = 1.34
-BOX = 360
-
-
-def _rel_l2(a, b):
-    return np.linalg.norm(a - b) / np.linalg.norm(b)
-
-
-def _stack(n):
-    return np.random.default_rng(0).standard_normal((n, BOX, BOX), dtype=np.float32) + 50
-
-
-def _params(n):
-    """Host-side STAR columns with distinct defocus per particle, so a misaligned chunk shows."""
-    rng = np.random.default_rng(1)
-    u = rng.uniform(15000, 32000, n)
-    columns = dict(
-        defocus_u=u,
-        defocus_v=u - rng.uniform(0, 2000, n),
-        defocus_angle=rng.uniform(0, 180, n),
-        voltage=np.full(n, 300.0),
-        cs=np.full(n, 2.7),
-        amp_contrast=np.full(n, 0.1),
-    )
-    ctf = CtfParams(**{k: v.astype(np.float32) for k, v in columns.items()})
-    return pipeline.StackParams(ctf=ctf, pixel_size=PIXEL_SIZE)
+from synthetic import PIXEL_SIZE
 
 
 def _to_device(backend, params):
@@ -39,7 +15,7 @@ def _to_device(backend, params):
 
 @pytest.mark.parametrize("backend", [CpuSerial(), FakeDevice()], ids=lambda b: b.name)
 def test_fused_chunk_equals_sequential_per_op_composition(backend):
-    host, params = _stack(5), _params(5)
+    host, params = synthetic.stack(5), synthetic.params(5)
     x = backend.to_device(host)
     ctf_params = _to_device(backend, params)
 
@@ -52,7 +28,7 @@ def test_fused_chunk_equals_sequential_per_op_composition(backend):
     fused = pipeline.process_chunk(backend, x, ctf_params, PIXEL_SIZE)
     assert fused.shape == host.shape
     assert fused.dtype == np.float32
-    assert _rel_l2(fused, sequential) < config.TOLERANCES["pipeline"]
+    assert errors(fused, sequential).rel_l2 < config.TOLERANCES["pipeline"]
 
 
 N_STACK = 503  # > the default chunk of 500, and prime, so 7 and 500 leave a short last chunk
@@ -60,7 +36,7 @@ N_STACK = 503  # > the default chunk of 500, and prime, so 7 and 500 leave a sho
 
 @pytest.fixture(scope="module")
 def stack_and_params():
-    return _stack(N_STACK), _params(N_STACK)
+    return synthetic.stack(N_STACK), synthetic.params(N_STACK)
 
 
 @pytest.fixture(scope="module")

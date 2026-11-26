@@ -104,7 +104,11 @@ class FakeDevice(_Staged):
 
 
 class Gpu(_Staged):
-    """CuPy on the current CUDA device, with pinned host staging buffers."""
+    """CuPy on the current CUDA device, with pinned host staging buffers.
+
+    Raises ImportError without CuPy, and RuntimeError (CuPy's CUDARuntimeError) without a
+    CUDA device or driver.
+    """
 
     name = "gpu"
 
@@ -112,6 +116,7 @@ class Gpu(_Staged):
         import cupy
         import cupyx
 
+        cupy.cuda.runtime.getDeviceCount()
         super().__init__()
         self.xp = cupy
         self._cupyx = cupyx

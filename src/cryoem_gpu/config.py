@@ -22,6 +22,8 @@ TOLERANCES = {
     "ctf_closed_form": 1e-4,
     # In grid steps: how far a sampled CTF sign change may sit from the analytic χ zero.
     "ctf_zero_steps": 2,
+    # Absolute, Å: STAR-derived pixel size against the spec's 1.34 Å.
+    "pixel_size": 1e-3,
     "normalize": 1e-5,
     "rfft2": 1e-5,
     "irfft2": 1e-5,

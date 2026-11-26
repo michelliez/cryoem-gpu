@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Agreement tests skip cleanly without CuPy.
-- [ ] *(derived, §6.1)* The sign-disagreement fraction is reported separately from the pipeline error.
-- [ ] *(derived, §5.3)* The smoke script prints the CUDA-event vs `perf_counter` compute-time comparison and writes nothing to the results CSV.
-- [ ] *(derived, §6.1)* No tolerance is hard-coded in tests.
+- [x] Agreement tests skip cleanly without CuPy.
+- [x] *(derived, §6.1)* The sign-disagreement fraction is reported separately from the pipeline error.
+- [x] *(derived, §5.3)* The smoke script prints the CUDA-event vs `perf_counter` compute-time comparison and writes nothing to the results CSV.
+- [x] *(derived, §6.1)* No tolerance is hard-coded in tests.
