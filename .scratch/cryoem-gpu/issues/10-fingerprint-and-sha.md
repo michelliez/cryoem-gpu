@@ -6,8 +6,8 @@ Pulled ahead of the Kaggle smoke test because M4.5 requires "the resolved `git_s
 
 **Blocked by:** 01 (Scaffold)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Each SHA source in §5.4 is unit-tested.
-- [ ] *(derived, §5.4)* `environment.json` records the fingerprint and which SHA source was used.
-- [ ] *(derived, §5.4)* `n_cores_usable` comes from `usable_cores()`.
+- [x] Each SHA source in §5.4 is unit-tested.
+- [x] *(derived, §5.4)* `environment.json` records the fingerprint and which SHA source was used.
+- [x] *(derived, §5.4)* `n_cores_usable` comes from `usable_cores()`.

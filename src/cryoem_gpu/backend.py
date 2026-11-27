@@ -2,6 +2,7 @@
 
 import math
 import os
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
@@ -13,6 +14,37 @@ def usable_cores() -> int:
     if hasattr(os, "sched_getaffinity"):
         return len(os.sched_getaffinity(0))
     return os.cpu_count() or 1
+
+
+def _nvidia_driver():
+    """NVIDIA driver version as nvidia-smi reports it (e.g. 535.104.05), or None."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+    lines = out.stdout.split()
+    return lines[0] if out.returncode == 0 and lines else None
+
+
+def gpu_info() -> dict:
+    """gpu_name, driver and cuda_runtime of CUDA device 0, all None without CuPy or a device."""
+    try:
+        import cupy
+
+        runtime = cupy.cuda.runtime
+        name = runtime.getDeviceProperties(0)["name"]
+        cuda = runtime.runtimeGetVersion()
+    except Exception:  # ImportError, or CuPy's CUDARuntimeError with no device or driver
+        return {"gpu_name": None, "driver": None, "cuda_runtime": None}
+    return {
+        "gpu_name": name.decode() if isinstance(name, bytes) else name,
+        "driver": _nvidia_driver(),
+        "cuda_runtime": f"{cuda // 1000}.{cuda % 1000 // 10}",
+    }
 
 
 class _Backend:
